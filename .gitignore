@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.DS_Store
+image_cache
+image_original
+DATA
+.venv
+.vscode
+__pycache__
