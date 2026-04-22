@@ -20,7 +20,7 @@ async def get_videos(
     sort_by: str = "score",
     sort_order: str = "desc",
 ) -> tuple[list, int]:
-    ALLOWED_SORT = {"score", "filename", "created_at", "scanned_at", "file_size", "duration", "height", "efficiency_score", "brisque_score"}
+    ALLOWED_SORT = {"score", "filename", "directory", "created_at", "scanned_at", "file_size", "duration", "height", "efficiency_score", "brisque_score"}
     if sort_by not in ALLOWED_SORT:
         sort_by = "score"
 

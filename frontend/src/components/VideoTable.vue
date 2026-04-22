@@ -118,7 +118,7 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="Path" prop="directory" show-overflow-tooltip min-width="200" resizable />
+      <el-table-column label="Path" prop="directory" sortable="custom" show-overflow-tooltip min-width="200" resizable />
 
       <el-table-column
         label="BRISQUE"
