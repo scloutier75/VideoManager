@@ -74,6 +74,7 @@ async def get_video_stats(db: AsyncSession) -> dict:
             func.avg(Video.score),
             func.max(Video.score),
             func.min(Video.score),
+            func.count(Video.id).filter(Video.is_missing == True),
         )
     )
     row = result.one()
@@ -82,6 +83,7 @@ async def get_video_stats(db: AsyncSession) -> dict:
         "avg_score": round(row[1], 1) if row[1] is not None else None,
         "max_score": row[2],
         "min_score": row[3],
+        "missing_count": row[4] or 0,
     }
 
 
@@ -113,6 +115,38 @@ async def update_video(db: AsyncSession, video_id: int, data: dict) -> Video:
 async def delete_video(db: AsyncSession, video_id: int):
     await db.execute(delete(Video).where(Video.id == video_id))
     await db.commit()
+
+
+async def mark_missing_videos(db: AsyncSession, existing_filepaths: set) -> int:
+    """
+    Mark any Video record whose filepath is not in *existing_filepaths* as missing,
+    and clear the missing flag for any that are now present again.
+    Returns the number of records newly flagged as missing.
+    """
+    # Clear missing flag for files that are present again
+    await db.execute(
+        update(Video)
+        .where(Video.filepath.in_(existing_filepaths), Video.is_missing == True)  # noqa: E712
+        .values(is_missing=False)
+    )
+    # Flag files no longer on disk
+    result = await db.execute(
+        update(Video)
+        .where(Video.filepath.not_in(existing_filepaths), Video.is_missing == False)  # noqa: E712
+        .values(is_missing=True)
+        .returning(Video.id)
+    )
+    await db.commit()
+    return len(result.fetchall())
+
+
+async def delete_missing_videos(db: AsyncSession) -> int:
+    """Delete all records flagged as missing. Returns the count deleted."""
+    result = await db.execute(
+        delete(Video).where(Video.is_missing == True).returning(Video.id)  # noqa: E712
+    )
+    await db.commit()
+    return len(result.fetchall())
 
 
 # ── ScanConfig ─────────────────────────────────────────────────────────────────

@@ -7,3 +7,11 @@ cd backend && source venv/bin/activate && uvicorn app.main:app --reload --port 9
 
 # Start the UI: 
 cd frontend && npm run dev
+
+# KOMETIZARR
+
+## Backend
+(.venv) scloutier@MiniMe:~/VideoManager/kometizarr/kometizarr$ uvicorn web.backend.main:app --reload --port 9500
+
+## Frontend
+(.venv) scloutier@MiniMe:~/VideoManager/kometizarr/kometizarr/web/frontend$ npm run dev

@@ -8,6 +8,7 @@ const api = axios.create({
 export const getVideos = (params) => api.get('/api/videos', { params })
 export const getVideoStats = () => api.get('/api/videos/stats')
 export const deleteVideo = (id) => api.delete(`/api/videos/${id}`)
+export const deleteMissingVideos = () => api.delete('/api/videos/missing/all')
 
 export const startScan = () => api.post('/api/scan/start')
 export const getScanStatus = () => api.get('/api/scan/status')

@@ -57,3 +57,10 @@ async def delete_video(video_id: int, db: AsyncSession = Depends(get_db)):
     if not video:
         raise HTTPException(status_code=404, detail="Video not found")
     await crud.delete_video(db, video_id)
+
+
+@router.delete("/missing/all", status_code=200)
+async def delete_missing_videos(db: AsyncSession = Depends(get_db)):
+    """Delete all records flagged as missing (file no longer found on disk)."""
+    count = await crud.delete_missing_videos(db)
+    return {"deleted": count}

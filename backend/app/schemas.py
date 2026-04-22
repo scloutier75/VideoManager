@@ -23,6 +23,7 @@ class VideoResponse(BaseModel):
     efficiency_score: Optional[float] = None
     brisque_score: Optional[float] = None
     file_mtime: Optional[float] = None
+    is_missing: Optional[bool] = False
     scanned_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
 

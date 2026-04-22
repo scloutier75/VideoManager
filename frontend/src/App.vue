@@ -22,6 +22,15 @@
           :precision="1"
           style="margin-right:24px"
         />
+        <el-badge
+          v-if="stats.missing_count > 0"
+          :value="stats.missing_count"
+          style="margin-right:12px"
+        >
+          <el-button type="warning" :icon="Delete" @click="cleanMissing">
+            Clean Missing
+          </el-button>
+        </el-badge>
         <el-button type="primary" :icon="Setting" @click="showScanPanel = true">
           Scanner
         </el-button>
@@ -63,12 +72,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { Setting, VideoPlay } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Setting, VideoPlay, Delete } from '@element-plus/icons-vue'
 import VideoTable from './components/VideoTable.vue'
 import VideoDetailDrawer from './components/VideoDetailDrawer.vue'
 import ScanPanel from './components/ScanPanel.vue'
-import { getVideos, getVideoStats, deleteVideo } from './api/index.js'
+import { getVideos, getVideoStats, deleteVideo, deleteMissingVideos } from './api/index.js'
 
 // ── State ──────────────────────────────────────────────────────────────────────
 
@@ -78,7 +87,7 @@ const page = ref(1)
 const limit = ref(50)
 const loading = ref(false)
 
-const stats = reactive({ total: 0, avg_score: null, max_score: null })
+const stats = reactive({ total: 0, avg_score: null, max_score: null, missing_count: 0 })
 
 const filters = reactive({})
 const sortParams = reactive({ sort_by: 'score', sort_order: 'desc' })
@@ -155,6 +164,21 @@ async function onDelete(id) {
     await loadVideos()
   } catch {
     ElMessage.error('Failed to remove record')
+  }
+}
+
+async function cleanMissing() {
+  try {
+    await ElMessageBox.confirm(
+      `Remove ${stats.missing_count} missing file record(s) from the database?`,
+      'Clean Missing Files',
+      { confirmButtonText: 'Delete', cancelButtonText: 'Cancel', type: 'warning' }
+    )
+    const res = await deleteMissingVideos()
+    ElMessage.success(`Removed ${res.data.deleted} missing record(s)`)
+    await loadVideos()
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('Failed to remove missing records')
   }
 }
 </script>

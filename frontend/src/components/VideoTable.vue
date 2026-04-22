@@ -55,6 +55,7 @@
       stripe
       border
       highlight-current-row
+      :row-class-name="({ row }) => row.is_missing ? 'row-missing' : ''"
       @row-click="(row) => emit('row-click', row)"
       @sort-change="onSortChange"
       style="width: 100%; cursor: pointer"
@@ -119,6 +120,22 @@
       </el-table-column>
 
       <el-table-column label="Path" prop="directory" sortable="custom" show-overflow-tooltip min-width="200" resizable />
+
+      <el-table-column
+        label="Last Processed"
+        prop="scanned_at"
+        sortable="custom"
+        width="165"
+        align="right"
+        resizable
+      >
+        <template #default="{ row }">
+          <span v-if="row.scanned_at" :title="row.scanned_at" style="color:#909399;font-size:12px">
+            {{ formatDateTime(row.scanned_at) }}
+          </span>
+          <span v-else style="color:#c0c4cc">–</span>
+        </template>
+      </el-table-column>
 
       <el-table-column
         label="BRISQUE"
@@ -275,6 +292,13 @@ function formatBitrate(bps) {
   if (bps >= 1_000) return `${(bps / 1_000).toFixed(0)} Kbps`
   return `${bps} bps`
 }
+
+function formatDateTime(iso) {
+  if (!iso) return '–'
+  const d = new Date(iso)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
 </script>
 
 <style scoped>
@@ -282,4 +306,13 @@ function formatBitrate(bps) {
 .range-label { font-size: 12px; color: #888; margin-bottom: 4px; }
 .filter-actions { display: flex; align-items: flex-end; padding-bottom: 2px; }
 .pagination { margin-top: 16px; justify-content: flex-end; display: flex; }
+
+:deep(.row-missing) {
+  color: #adb5bd !important;
+  font-style: italic;
+}
+:deep(.row-missing td) {
+  background-color: #f8f9fa !important;
+  color: #adb5bd !important;
+}
 </style>

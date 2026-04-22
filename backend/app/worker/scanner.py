@@ -33,6 +33,9 @@ async def run_scan(db: AsyncSession) -> dict:
 
     found = processed = skipped = errors = 0
 
+    # Track all filepaths seen on disk during this scan
+    seen_filepaths: set = set()
+
     try:
         # Collect folders from .env and from the database
         env_folders = settings.scan_folders_list
@@ -56,6 +59,7 @@ async def run_scan(db: AsyncSession) -> dict:
 
                     filepath = os.path.join(root, filename)
                     found += 1
+                    seen_filepaths.add(filepath)
 
                     try:
                         stat = os.stat(filepath)
@@ -123,6 +127,11 @@ async def run_scan(db: AsyncSession) -> dict:
                             pass
 
             logger.info(f"[Scanner] ── Done with folder: {folder}  ({folder_video_count} processed)")
+
+        # After scanning all folders, flag any DB records whose files are gone
+        newly_missing = await crud.mark_missing_videos(db, seen_filepaths)
+        if newly_missing:
+            logger.warning(f"[Scanner] {newly_missing} file(s) flagged as missing (no longer found on disk)")
 
         await crud.complete_scan_job(
             db, job.id, found, processed, skipped, errors, status="completed"
