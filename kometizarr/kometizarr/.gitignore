@@ -1,0 +1,93 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Config files with secrets
+config.json
+*.env
+.env.local
+!.env.example
+
+# Temporary files
+/tmp/
+*.tmp
+*.log
+*.Identifier
+
+# Test output
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Output directories
+/output/
+/rated_posters/
+*.jpg
+*.png
+!docs/**/*.png
+!docs/**/*.jpg
+!web/frontend/public/favicon-32x32.png
+!assets/logos/*.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project progress tracking (personal notes)
+kometizarr_progress.md
+AGENTS.md
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+terraform/*.auto.tfvars
+
+# Node modules (for web frontend)
+web/frontend/node_modules/
+web/frontend/dist/
+web/frontend/.vite/
+
+# Kometizarr data directory (backups, temp files)
+data/
+landing-page/
+restore_original_posters.py
+
+# Nested repos (PRs/forks)
+unRAID-CA-templates/
+
+# Director Claude
+.director-context/
