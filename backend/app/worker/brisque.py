@@ -163,16 +163,21 @@ def _brisque_frame(frame_path: str) -> Optional[float]:
         return None
 
 
-def score_video_brisque(filepath: str, n_frames: int = 8) -> Optional[float]:
+def score_video_brisque(filepath: str, n_frames: int = 8) -> tuple[Optional[float], Optional[str]]:
     """
     Compute a BRISQUE-based perceptual quality score for a video, returned on 0-10
-    (higher = better).  Returns None if scoring is not possible.
+    (higher = better).
+
+    Returns a tuple ``(score, failure_reason)``:
+      - On success: ``(float, None)``
+      - On failure: ``(None, str)`` where *failure_reason* describes what went wrong.
     """
     with tempfile.TemporaryDirectory(prefix="vmgr_brisque_") as tmpdir:
         frame_paths = _extract_frames(filepath, n_frames, tmpdir)
         if not frame_paths:
+            reason = "ffmpeg extracted 0 frames (unsupported format, corrupt file, or timeout)"
             logger.warning(f"[BRISQUE] No frames extracted from: {filepath}")
-            return None
+            return None, reason
 
         raw_scores = []
         for fp in frame_paths:
@@ -181,10 +186,14 @@ def score_video_brisque(filepath: str, n_frames: int = 8) -> Optional[float]:
                 raw_scores.append(s)
 
         if not raw_scores:
+            reason = (
+                f"all {len(frame_paths)} frame(s) failed BRISQUE scoring "
+                "(library error, corrupt frames, or missing opencv/skimage)"
+            )
             logger.warning(
                 f"[BRISQUE] All {len(frame_paths)} frame(s) failed to score for: {Path(filepath).name}"
             )
-            return None
+            return None, reason
 
         # Use median to reduce influence of scene-cut outliers
         median_raw = float(np.median(raw_scores))
@@ -194,4 +203,4 @@ def score_video_brisque(filepath: str, n_frames: int = 8) -> Optional[float]:
             f"[BRISQUE] {Path(filepath).name}: "
             f"raw_median={median_raw:.1f}  quality={quality} over {len(raw_scores)} frames"
         )
-        return quality
+        return quality, None

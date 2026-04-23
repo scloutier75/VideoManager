@@ -24,6 +24,7 @@ class VideoResponse(BaseModel):
     brisque_score: Optional[float] = None
     file_mtime: Optional[float] = None
     is_missing: Optional[bool] = False
+    is_corrupt: Optional[bool] = False
     scanned_at: Optional[datetime] = None
     created_at: Optional[datetime] = None
 

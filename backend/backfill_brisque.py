@@ -60,7 +60,7 @@ async def process_video(conn, row, n_frames: int, dry_run: bool, sem: asyncio.Se
 
         try:
             loop = asyncio.get_event_loop()
-            score = await loop.run_in_executor(
+            score, fail_reason = await loop.run_in_executor(
                 None, score_video_brisque, filepath, n_frames
             )
         except Exception as e:
@@ -68,7 +68,7 @@ async def process_video(conn, row, n_frames: int, dry_run: bool, sem: asyncio.Se
             return
 
         if score is None:
-            logger.warning(f"[{video_id}] No score produced for: {filepath}")
+            logger.warning(f"[{video_id}] No score produced for: {filepath}  reason={fail_reason}")
             return
 
         logger.info(f"[{video_id}] Score={score:.1f}  {'(dry-run, not saved)' if dry_run else ''}")

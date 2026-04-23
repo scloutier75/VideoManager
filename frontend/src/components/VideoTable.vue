@@ -55,11 +55,28 @@
       stripe
       border
       highlight-current-row
-      :row-class-name="({ row }) => row.is_missing ? 'row-missing' : ''"
+      :row-class-name="({ row }) => row.is_corrupt ? 'row-corrupt' : row.is_missing ? 'row-missing' : ''"
       @row-click="(row) => emit('row-click', row)"
       @sort-change="onSortChange"
       style="width: 100%; cursor: pointer"
     >
+      <!-- Status icon column: corrupt (red) / missing (amber) / ok (empty) -->
+      <el-table-column prop="is_corrupt" sortable="custom" width="46" align="center" resizable>
+        <template #header>
+          <el-tooltip content="File status: corrupt or missing" placement="top">
+            <el-icon style="vertical-align:middle"><Warning /></el-icon>
+          </el-tooltip>
+        </template>
+        <template #default="{ row }">
+          <el-tooltip v-if="row.is_corrupt" content="Corrupt – ffprobe cannot read this file" placement="right">
+            <el-icon color="#f56c6c" size="15"><CircleCloseFilled /></el-icon>
+          </el-tooltip>
+          <el-tooltip v-else-if="row.is_missing" content="Missing – file no longer found on disk" placement="right">
+            <el-icon color="#e6a23c" size="15"><WarnTriangleFilled /></el-icon>
+          </el-tooltip>
+        </template>
+      </el-table-column>
+
       <el-table-column label="Score" prop="score" sortable="custom" width="100" align="center" resizable>
         <template #default="{ row }">
           <el-tag :type="scoreTagType(row.score)" size="large" effect="dark" round>
@@ -182,7 +199,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Search, Refresh, View, InfoFilled } from '@element-plus/icons-vue'
+import { Search, Refresh, View, InfoFilled, CircleCloseFilled, WarnTriangleFilled, Warning } from '@element-plus/icons-vue'
 
 const props = defineProps({
   videos: { type: Array, default: () => [] },
@@ -314,5 +331,11 @@ function formatDateTime(iso) {
 :deep(.row-missing td) {
   background-color: #f8f9fa !important;
   color: #adb5bd !important;
+}
+:deep(.row-corrupt) {
+  color: #f56c6c !important;
+}
+:deep(.row-corrupt td) {
+  background-color: #fff0f0 !important;
 }
 </style>

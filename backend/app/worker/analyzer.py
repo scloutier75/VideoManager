@@ -11,10 +11,17 @@ VIDEO_EXTENSIONS = {
 }
 
 
-def probe_video(filepath: str) -> Optional[dict]:
-    """Run ffprobe and return parsed JSON, or None on failure."""
+def probe_video(filepath: str) -> tuple[Optional[dict], Optional[str]]:
+    """
+    Run ffprobe and return ``(data, failure_reason)``.
+
+    On success: ``(dict, None)``.
+    On failure: ``(None, str)`` where *failure_reason* is the first meaningful
+    error line from ffprobe stderr, used to distinguish corrupt files from
+    transient I/O errors.
+    """
     cmd = [
-        "ffprobe", "-v", "quiet",
+        "ffprobe", "-v", "error",   # 'error' level: show only errors, not info
         "-print_format", "json",
         "-show_streams", "-show_format",
         filepath,
@@ -27,10 +34,23 @@ def probe_video(filepath: str) -> Optional[dict]:
             timeout=60,
         )
         if result.returncode != 0:
-            return None
-        return json.loads(result.stdout)
-    except (subprocess.TimeoutExpired, json.JSONDecodeError, FileNotFoundError):
-        return None
+            # Extract first non-empty stderr line as the reason
+            reason = next(
+                (ln.strip() for ln in result.stderr.splitlines() if ln.strip()),
+                "ffprobe non-zero exit (no stderr)"
+            )
+            return None, reason
+        data = json.loads(result.stdout)
+        # An empty streams list means the container was read but has no usable tracks
+        if not data.get("streams"):
+            return None, "ffprobe returned no streams (empty or unrecognised container)"
+        return data, None
+    except subprocess.TimeoutExpired:
+        return None, "ffprobe timed out after 60 s"
+    except json.JSONDecodeError:
+        return None, "ffprobe output was not valid JSON"
+    except FileNotFoundError:
+        return None, "ffprobe not found in PATH"
 
 
 def _parse_frame_rate(fps_str: str) -> float:

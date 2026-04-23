@@ -29,6 +29,7 @@ class Video(Base):
     brisque_score = Column(Float, index=True)     # perceptual quality 0-10 (higher = better)
     file_mtime = Column(Float)          # Unix timestamp for change detection
     is_missing = Column(Boolean, default=False, nullable=False, server_default='false')  # True when file no longer found on disk
+    is_corrupt = Column(Boolean, default=False, nullable=False, server_default='false')  # True when ffprobe reports invalid/unreadable data
     scanned_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
