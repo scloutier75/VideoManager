@@ -50,6 +50,8 @@
         @page-change="onPageChange"
         @size-change="onSizeChange"
         @row-click="openDetail"
+        @delete-video="onDelete"
+        @clean-visible-missing="onCleanVisibleMissing"
       />
     </el-main>
 
@@ -164,6 +166,16 @@ async function onDelete(id) {
     await loadVideos()
   } catch {
     ElMessage.error('Failed to remove record')
+  }
+}
+
+async function onCleanVisibleMissing(ids) {
+  try {
+    await Promise.all(ids.map((id) => deleteVideo(id)))
+    ElMessage.success(`Removed ${ids.length} record(s)`)
+    await loadVideos()
+  } catch {
+    ElMessage.error('Failed to remove records')
   }
 }
 

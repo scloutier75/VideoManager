@@ -19,7 +19,7 @@
           @input="emitFilters"
         />
       </el-col>
-      <el-col :span="6">
+      <el-col :span="6" style="padding: 0 16px">
         <div class="range-label">Score: {{ scoreRange[0] }} – {{ scoreRange[1] }}</div>
         <el-slider
           v-model="scoreRange"
@@ -30,7 +30,7 @@
           @change="emitFilters"
         />
       </el-col>
-      <el-col :span="6">
+      <el-col :span="5" style="padding: 0 16px">
         <div class="range-label">
           Efficiency: {{ effRange[0] === 0 && effRange[1] === effMax ? 'all' : `${effRange[0]} – ${effRange[1]}` }}
         </div>
@@ -43,8 +43,21 @@
           @change="emitFilters"
         />
       </el-col>
-      <el-col :span="2" class="filter-actions">
+      <el-col :span="3" class="filter-actions">
         <el-button @click="resetFilters" :icon="Refresh" title="Reset filters" />
+        <el-popconfirm
+          v-if="visibleMissingCount > 0"
+          :title="`Remove ${visibleMissingCount} visible missing record(s) from the database?`"
+          confirm-button-text="Delete"
+          cancel-button-text="Cancel"
+          width="270"
+          @confirm="cleanVisibleMissing"
+        >
+          <template #reference>
+            <el-button type="warning" :icon="Delete" title="Remove all visible missing records" />
+          </template>
+        </el-popconfirm>
+        <el-button v-else type="warning" :icon="Delete" disabled title="No missing records visible" />
       </el-col>
     </el-row>
 
@@ -74,6 +87,7 @@
           <el-tooltip v-else-if="row.is_missing" content="Missing – file no longer found on disk" placement="right">
             <el-icon color="#e6a23c" size="15"><WarnTriangleFilled /></el-icon>
           </el-tooltip>
+          <span v-else />
         </template>
       </el-table-column>
 
@@ -175,9 +189,21 @@
         </template>
       </el-table-column>
 
-      <el-table-column label="" width="60" align="center">
+      <el-table-column label="" width="90" align="center">
         <template #default="{ row }">
           <el-button link :icon="View" @click.stop="emit('row-click', row)" />
+          <el-popconfirm
+            v-if="row.is_missing"
+            title="Remove this missing record from the database?"
+            confirm-button-text="Delete"
+            cancel-button-text="Cancel"
+            width="240"
+            @confirm="emit('delete-video', row.id)"
+          >
+            <template #reference>
+              <el-button link type="danger" :icon="Delete" @click.stop title="Remove missing record" />
+            </template>
+          </el-popconfirm>
         </template>
       </el-table-column>
     </el-table>
@@ -199,7 +225,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Search, Refresh, View, InfoFilled, CircleCloseFilled, WarnTriangleFilled, Warning } from '@element-plus/icons-vue'
+import { Search, Refresh, View, InfoFilled, CircleCloseFilled, WarnTriangleFilled, Warning, Delete } from '@element-plus/icons-vue'
 
 const props = defineProps({
   videos: { type: Array, default: () => [] },
@@ -209,7 +235,7 @@ const props = defineProps({
   loading: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['filter-change', 'sort-change', 'page-change', 'size-change', 'row-click'])
+const emit = defineEmits(['filter-change', 'sort-change', 'page-change', 'size-change', 'row-click', 'delete-video', 'clean-visible-missing'])
 
 const localSearch = ref('')
 const localCodec = ref('')
@@ -242,6 +268,14 @@ function resetFilters() {
   scoreRange.value = [0, 10]
   effRange.value = [0, effMax]
   emit('filter-change', {})
+}
+
+const visibleMissingCount = computed(() => props.videos.filter((v) => v.is_missing).length)
+
+function cleanVisibleMissing() {
+  const ids = props.videos.filter((v) => v.is_missing).map((v) => v.id)
+  if (!ids.length) return
+  emit('clean-visible-missing', ids)
 }
 
 function onSortChange({ prop, order }) {
@@ -321,7 +355,7 @@ function formatDateTime(iso) {
 <style scoped>
 .filter-bar { margin-bottom: 16px; align-items: flex-end; }
 .range-label { font-size: 12px; color: #888; margin-bottom: 4px; }
-.filter-actions { display: flex; align-items: flex-end; padding-bottom: 2px; }
+.filter-actions { display: flex; align-items: flex-end; padding-bottom: 2px; gap: 8px; }
 .pagination { margin-top: 16px; justify-content: flex-end; display: flex; }
 
 :deep(.row-missing) {

@@ -8,3 +8,4 @@ DATA
 .venv
 .vscode
 __pycache__
+backend/scan_failures.log
